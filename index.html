@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disaster-Ready Community</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+  <!-- Intro Popup -->
+  <div id="intro-popup" class="popup">
+    <h2>Welcome to Disaster-Ready Community</h2>
+    <p>This site provides an AI-powered disaster risk assessment using global data. Explore insights, impact analysis, and trends across various types of natural disasters.</p>
+    <button onclick="closePopup()">Close</button>
+  </div>
+
+  <!-- Left Information Panel -->
+  <div class="info-panel">
+    <h3>The dataset</h3>
+    <ul>
+      <t>Our dataset records global disasters from 2000 to present, detailing disaster type, location, date, human impact (deaths, injuries), and economic damage</t>
+    </ul>
+    <h3>The interactive world map</h3>
+    <ul>
+      <t>This interactive map visualizes global disaster events by location and type. Each marker represents a disaster, with popups showing details like disaster type, year, location, and the total affected population. Clustered markers simplify dense areas, helping users explore disaster patterns and identify high-risk regions worldwide. This tool offers a quick overview of global disaster impacts and frequency.</t>
+</ul>
+  </div>
+
+    <!-- Right Navigation Buttons -->
+  <div class="nav-buttons">
+    <button onclick="window.location.href='impact.html'">Impact Analysis - Deaths, Injuries, Total Affected</button>
+    <button onclick="window.location.href='economic.html'">Economic Damage by Type and Region</button>
+    <button onclick="window.location.href='response.html'">Disaster Response Effectiveness </button>
+    <button onclick="window.location.href='aid_insured.html'">Trends in Aid and Insured Damage Adjusted over Time</button>
+  </div>
+  
+  <!-- Interactive Map -->
+  <div id="map-container">
+    <!-- Insert R-generated map here -->
+    <iframe src="interactive_map.html" width="100%" height="100%"></iframe>
+  </div>
+
+
+
+  <script src="script.js"></script>
+</body>
+</html>

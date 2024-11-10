@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IEconomic Damage by Type and Region</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="plot-page">
+    <!-- Back Button -->
+    <button onclick="window.location.href='index.html'" class="back-button">← Back</button>
+
+    <!-- Main Plot -->
+    <div class="plot-area">
+      <h2>Economic Damage by Type and Region</h2>
+      <!-- Embed R-generated plot HTML for charts -->
+      <iframe src="economic_map.html" width="130%" height="130%"></iframe>
+    </div>
+
+    <!-- Info and Description -->
+    <div class="info-panel">
+      <h3>Description</h3>
+      <p>This interactive world heatmap visualizes economic damage from disasters, highlighting regions with low (blue) to high (red) impact. Each point's intensity is based on the economic damage caused by disaster events, making areas with higher damage more prominent. The simplified color scheme emphasizes major impact zones, helping to identify regions most affected by costly disasters at a glance. This map offers a clear, comparative view of economic vulnerability to disasters worldwide, aiding in risk assessment and resource allocation for disaster preparedness and recovery.</p>
+    </div>
+  </div>
+
+</body>
+</html>
