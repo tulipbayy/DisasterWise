@@ -1,0 +1,251 @@
+---
+title: "DisasterWise: AI-Powered Global Disaster Risk Prediction Platform"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(maps)
+library(leaflet)
+library(tidycensus)
+library(readr)
+library(reshape2)
+library(tidyr)
+library(dplyr)
+library(readxl)
+library(sf)
+library(leaflet.extras)
+library(htmlwidgets)
+```
+
+```{r}
+dataset <- read_excel("public_emdat_custom_request_2024_11_09_c76f5be8_c1dd_40b7_813f_2a381d6a485e.xlsx")
+```
+
+
+## Interactive World Map - Frequency of Disaster Type 
+  This interactive map visualizes global disaster events by location and type. Each marker represents a disaster, with popups showing details like disaster type, year, location, and the total affected population. Clustered markers simplify dense areas, helping users explore disaster patterns and identify high-risk regions worldwide. This tool offers a quick overview of global disaster impacts and frequency.
+
+```{r}
+map_data <- dataset %>%
+  filter(!is.na(Latitude) & !is.na(Longitude))
+
+interactive_map <- leaflet(data = map_data) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    ~Longitude, ~Latitude,
+    color = ~`Disaster Type`, # Adjust based on the exact column name
+    radius = 5,
+    popup = ~paste("Disaster Type:", `Disaster Type`, "<br>",
+                   "Total Affected:", `Total Affected`, "<br>",
+                   "Location:", `Location`, "<br>",
+                   "Year:", `Start Year`),
+    clusterOptions = markerClusterOptions()
+  )
+interactive_map
+```
+
+```{r}
+#saveWidget(
+  #interactive_map,
+  #"interactive_map.html",
+  #selfcontained = TRUE,
+  #background = "white"
+#)
+```
+
+## Impact Analysis - Deaths, Injuries, and Total Affected
+
+  These bubble charts display the human impact of various disaster types across regions, focusing on deaths, injuries, and total affected. Each chart uses bubble size to represent the magnitude of impact, with larger bubbles indicating higher numbers. Colors differentiate regions, allowing for easy comparison across disaster types and regions. This visualization helps identify the most severe disaster types and regions most affected, supporting better disaster preparedness and response planning.
+
+```{r}
+impact_data <- dataset %>%
+  filter(!is.na(`Total Deaths`) & !is.na(`No. Injured`) & !is.na(`Total Affected`)) %>%
+  select(`Disaster Type`, `Region`, `Total Deaths`, `No. Injured`, `Total Affected`)
+
+impact_long <- impact_data %>%
+  pivot_longer(cols = c(`Total Deaths`, `No. Injured`, `Total Affected`),
+               names_to = "Impact_Type",
+               values_to = "Count")
+```
+
+```{r}
+# Bubble Chart for Total Deaths
+bubble_chart_1 <- ggplot(impact_long %>% filter(Impact_Type == "Total Deaths"), 
+       aes(x = `Disaster Type`, y = Region, size = Count, color = Region)) +
+  geom_point(alpha = 0.6) +
+  scale_size(range = c(1, 15), name = "Total Deaths") +
+  labs(title = "Impact Analysis of Disasters: Total Deaths",
+       x = "Disaster Type",
+       y = "Region") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+bubble_chart_1
+```
+```{r}
+#ggsave("impact_analysis_total_deaths.png", bubble_chart_1, width = 8, height = 6)
+```
+
+
+```{r}
+# Bubble Chart for Total Affected
+bubble_chart_2 <- ggplot(impact_long %>% filter(Impact_Type == "Total Affected"), 
+       aes(x = `Disaster Type`, y = Region, size = Count, color = Region)) +
+  geom_point(alpha = 0.6) +
+  scale_size(range = c(1, 15), name = "Total Affected") +
+  labs(title = "Impact Analysis of Disasters: Total Affected",
+       x = "Disaster Type",
+       y = "Region") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+bubble_chart_2
+```
+```{r}
+#ggsave("impact_analysis_total_affected.png", bubble_chart_2, width = 8, height = 6)
+```
+
+```{r}
+# Bubble Chart for No. Injured
+bubble_chart_3 <- ggplot(impact_long %>% filter(Impact_Type == "No. Injured"), 
+       aes(x = `Disaster Type`, y = Region, size = Count, color = Region)) +
+  geom_point(alpha = 0.6) +
+  scale_size(range = c(1, 15), name = "No. Injured") +
+  labs(title = "Impact Analysis of Disasters: No. Injured",
+       x = "Disaster Type",
+       y = "Region") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+bubble_chart_3
+```
+```{r}
+#ggsave("impact_analysis_total_injured.png", bubble_chart_3, width = 8, height = 6)
+```
+
+## Economic Damage by Type and Region
+  This world map heatmap visualizes economic damage from disasters, highlighting regions with low (blue) to high (red) impact. Each point's intensity is based on the economic damage caused by disaster events, making areas with higher damage more prominent. The simplified color scheme emphasizes major impact zones, helping to identify regions most affected by costly disasters at a glance. This map offers a clear, comparative view of economic vulnerability to disasters worldwide, aiding in risk assessment and resource allocation for disaster preparedness and recovery.
+
+```{r}
+economic_data <- dataset %>%
+  filter(!is.na(`Total Damage ('000 US$)`) & !is.na(Latitude) & !is.na(Longitude)) %>%
+  select(`Disaster Type`, `Total Damage ('000 US$)`, Latitude, Longitude)
+
+economic_data <- economic_data %>%
+  mutate(Damage_Scale = scale(`Total Damage ('000 US$)`))
+
+economic_map <- leaflet(economic_data) %>%
+  addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+  addHeatmap(
+    lng = ~Longitude,
+    lat = ~Latitude,
+    intensity = ~`Total Damage ('000 US$)`, # Adjust this to Damage_Scale if normalized
+    radius = 15, 
+    blur =2, 
+    max = max(map_data$`Total Damage ('000 US$)`, na.rm = TRUE), # Max intensity for heatmap
+    gradient = c("blue", "red") # Gradient from low to high damage
+  ) %>%
+  addLegend(
+    "bottomright",
+    colors = c("blue", "red"),
+    labels = c("Low Damage", "High Damage"),
+    title = "Economic Damage"
+  )
+economic_map
+```
+```{r}
+#saveWidget(economic_map, "economic_map.html", selfcontained = TRUE)
+```
+
+## Disaster Response Effectiveness 
+  This bar chart illustrates the effectiveness of disaster response efforts, measured by the total number of deaths, across different disaster types. Each bar represents a specific disaster type, such as floods, earthquakes, or wildfires, with colors indicating the type of response intervention by OFDA/BHA (Office of U.S. Foreign Disaster Assistance/Bureau for Humanitarian Assistance) or an appeal for international aid. The chart compares the mortality impact of each disaster type under different response statuses, allowing viewers to observe which responses may be associated with lower or higher fatalities.
+
+```{r}
+insurance_data <- dataset %>%
+  filter(!is.na(`OFDA/BHA Response`) | !is.na(`Appeal`))
+
+
+agg_data <- insurance_data %>%
+  group_by(`Disaster Type`, `OFDA/BHA Response`) %>%
+  summarize(Total_Deaths = sum(`Total Deaths`, na.rm = TRUE),
+            Total_Affected = sum(`No. Affected`, na.rm = TRUE),
+            Total_Damage = sum(`Total Damage ('000 US$)`, na.rm = TRUE)) %>%
+  ungroup()
+
+# Plot the bar chart
+response_plot <- ggplot(agg_data, aes(x = reorder(`Disaster Type`, -Total_Deaths), y = Total_Deaths, fill = `OFDA/BHA Response`)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Disaster Response Effectiveness by OFDA/BHA Response",
+       x = "Disaster Type",
+       y = "Total Deaths",
+       fill = "OFDA/BHA Response") +
+  theme_minimal() +
+  coord_flip()  # Optional: for horizontal bars
+
+response_plot
+```
+
+```{r}
+#ggsave("response.png", response_plot, width = 15, height = 12)
+```
+
+## Trends in Aid and Insured Damage Adjusted over Time 
+  The line graph provides a visual representation of the trends in aid costs and insured damage costs over time, broken down by disaster type. The x-axis represents years, while the y-axis shows monetary values in thousands of U.S. dollars. The graph includes two separate lines for each disaster type: one for aid contributions and another for insured damage (adjusted). Different colors are used to distinguish disaster types, facilitating a comparative view of how aid and reconstruction costs fluctuate across different disaster types and time periods.
+
+```{r}
+# Check the structure and unique values of Start.Year and Disaster.Type before grouping
+str(dataset$Start.Year)
+unique(dataset$Start.Year)
+unique(dataset$Disaster.Type)
+
+# Filter out rows with NA in the relevant columns and convert columns to numeric if necessary
+filtered_data <- dataset %>%
+  filter(!is.na(`AID Contribution ('000 US$)`) & !is.na(`Insured Damage, Adjusted ('000 US$)`))
+
+# Aggregate the filtered data by Start Year and Disaster Type
+agg_data <- filtered_data %>%
+  group_by(`Start Year`, `Disaster Type`) %>%
+  summarize(
+    Aid_Costs = sum(`AID Contribution ('000 US$)`, na.rm = TRUE),
+    Insured_Damage = sum(`Insured Damage, Adjusted ('000 US$)`, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Check the aggregated data to ensure it has multiple rows with distinct values
+print(agg_data)
+
+# Plot the line chart for Aid Costs
+aid_plot <- ggplot(agg_data, aes(x = `Start Year`, y = Aid_Costs, color = `Disaster Type`)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Trend in Aid Costs Over Time by Disaster Type",
+    x = "Year",
+    y = "Aid Costs ('000 US$)",
+    color = "Disaster Type"
+  ) +
+  theme_minimal()
+aid_plot
+```
+```{r}
+#ggsave("aid.png", aid_plot, width = 10, height = 8)
+```
+
+
+```{r}
+# Plot the line chart for Insured Damage
+insured_plot <- ggplot(agg_data, aes(x = `Start Year`, y = Insured_Damage, color = `Disaster Type`)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Trend in Insured Damage Over Time by Disaster Type",
+    x = "Year",
+    y = "Insured Damage ('000 US$)",
+    color = "Disaster Type"
+  ) +
+  theme_minimal()
+insured_plot
+```
+
+```{r}
+#ggsave("insured.png", insured_plot, width = 10, height = 8)
+```
+
